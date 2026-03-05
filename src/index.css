@@ -1,0 +1,209 @@
+/* Default / Light Theme: Divine Saffron 🌅 */
+:root,
+[data-theme="light"] {
+  --background: 0 0% 99%;
+  /* #fcfcfc */
+  --surface: 0 0% 100%;
+  /* Pure White */
+  --surface-variant: 0 0% 96%;
+  /* User Bubble Grey */
+
+  --primary: 28 100% 60%;
+  /* Deep Saffron FF9933 */
+  --secondary: 43 74% 49%;
+  /* Royal Gold D4AF37 */
+  --accent: 14 100% 40%;
+  /* Terracotta CC5500 */
+
+  --text-primary: 0 0% 20%;
+  /* #333 */
+  --text-secondary: 0 0% 40%;
+  /* #666 */
+  --text-tertiary: 0 0% 60%;
+  /* #999 */
+  --border: 0 0% 92%;
+
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --bubble-assistant: #FFFFFF;
+  --bubble-user: #F2F2F2;
+
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+}
+
+/* Dark Theme: Midnight Gold 👑 */
+[data-theme="dark"] {
+  --background: 240 10% 8%;
+  /* Deep Charcoal #121214 */
+  --surface: 240 7% 12%;
+  /* #1c1c1e */
+  --surface-variant: 240 6% 18%;
+  /* #2b2b2e */
+
+  --primary: 43 74% 49%;
+  /* Royal Gold D4AF37 */
+  --secondary: 28 100% 60%;
+  /* Deep Saffron FF9933 */
+  --accent: 210 100% 60%;
+  /* Cosmic Blue Accent */
+
+  --text-primary: 0 0% 95%;
+  /* Off-white #F2F2F2 */
+  --text-secondary: 0 0% 70%;
+  /* Soft Silver #B3B3B3 */
+  --text-tertiary: 0 0% 50%;
+  /* #808080 */
+  --border: 240 6% 22%;
+
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --bubble-assistant: #1c1c1e;
+  --bubble-user: #2b2b2e;
+}
+
+body {
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--text-primary)) !important;
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Chat Core */
+.chat-container {
+  flex: 1;
+  padding: 80px 24px max(240px, 25vh);
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* API Key Modal */
+.api-key-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.api-key-content {
+  background: #fff;
+  padding: 40px;
+  border-radius: 20px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.api-key-content h2 {
+  font-family: var(--font-serif);
+  color: #333;
+  margin-top: 0;
+}
+
+.api-key-content p {
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.api-key-content input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.api-key-content input:focus {
+  outline: none;
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.api-key-content button {
+  background: #FF9933;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+
+.api-key-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(255, 153, 51, 0.3);
+}
+
+/* Animations */
+@keyframes fadeInMsg {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+/* ========== MOBILE RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .chat-container {
+    padding: 80px 12px max(200px, 22vh);
+  }
+
+  .chat-messages {
+    gap: 16px;
+  }
+}
+
+/* Very small phones (< 400px) - hide button text in header */
+@media (max-width: 400px) {
+  :root {
+    --back-text-display: none;
+    --center-text-display: none;
+  }
+}

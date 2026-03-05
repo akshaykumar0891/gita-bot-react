@@ -1,0 +1,114 @@
+.pranayama-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--background);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.fadeIn {
+    animation: fadein 0.5s ease;
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.close-pranayama {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.close-pranayama:hover {
+    opacity: 1;
+}
+
+.pranayama-content {
+    text-align: center;
+}
+
+.meditation-title {
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    color: hsl(var(--text-primary));
+    margin-bottom: 8px;
+    font-weight: 400;
+}
+
+.meditation-subtitle {
+    font-family: var(--font-sans);
+    color: hsl(var(--text-secondary));
+    font-size: 1.1rem;
+    margin-bottom: 64px;
+}
+
+.breathing-circle-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+}
+
+.breathing-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    box-shadow: 0 10px 40px var(--shadow-color);
+    transition: transform 4s ease-in-out;
+}
+
+.breathing-circle.inhale {
+    transform: scale(1.8);
+    transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breathing-circle.hold {
+    transform: scale(1.8);
+    transition: transform 4s linear;
+}
+
+.breathing-circle.exhale {
+    transform: scale(1);
+    transition: transform 6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breathing-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: var(--font-sans);
+}
+
+.phase-text {
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.time-text {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-top: 4px;
+}
