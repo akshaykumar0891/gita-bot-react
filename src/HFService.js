@@ -25,6 +25,10 @@ class HFService {
             // Add the new message
             prompt += ` [INST] ${userInput} [/INST]`;
 
+            if (!HF_TOKEN) {
+                throw new Error("Hugging Face Token is missing. Please add VITE_HF_API_TOKEN to your .env file or GitHub Secrets.");
+            }
+
             const response = await fetch(
                 `https://api-inference.huggingface.co/models/${MODEL_ID}`,
                 {
@@ -40,6 +44,9 @@ class HFService {
                             temperature: 0.7,
                             top_p: 0.95,
                             return_full_text: false,
+                        },
+                        options: {
+                            wait_for_model: true // Important: Wakes up the model if sleeping
                         }
                     }),
                 }
