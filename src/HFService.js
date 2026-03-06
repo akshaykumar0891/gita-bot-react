@@ -1,7 +1,6 @@
-// Allow fallback for older variables just in case
-const HF_TOKEN = import.meta.env.VITE_HF_TOKEN || import.meta.env.VITE_HF_API_TOKEN || import.meta.env.VITE_GEMINI_API_KEY;
-
-const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3";
+const HF_TOKEN = import.meta.env.VITE_HF_TOKEN;
+const MODEL_ID = "google/gemma-1.1-7b-it";
+const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
 
 const SYSTEM_PROMPT = `You are Lord Krishna from the Bhagavad Gita. 
 Your goal is to provide spiritual guidance, clarity, and peace to the user.
@@ -12,81 +11,82 @@ If the user asks a modern problem (e.g., job stress, relationship issues), expla
 Always end with a short blessing or a calming thought.`;
 
 class HFService {
-    constructor() {
-        if (!HF_TOKEN) {
-            console.error("Hugging Face Token is missing. Please add VITE_HF_TOKEN to your .env file or GitHub Secrets.");
-        }
-    }
-
     async sendMessage(userInput, history = []) {
         try {
             if (!HF_TOKEN) {
+                console.error("Hugging Face Token is missing. Please add VITE_HF_TOKEN to your .env file.");
                 throw new Error("Hugging Face Token is missing.");
             }
 
-            // Based on user request to use the specific model path exactly, wrapping in CORS proxy
-            const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
-            const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
-
-            // Format history using the Mistral [INST] tags as requested for base inputs
-            let prompt = `<s>[INST] ${SYSTEM_PROMPT} [/INST] </s>`;
+            // Simple formatting for Gemma
+            let prompt = `<start_of_turn>user\n${SYSTEM_PROMPT}\n`;
 
             history.forEach(msg => {
-                const role = msg.sender === 'user' ? ' [INST] ' : ' ';
-                const endRole = msg.sender === 'user' ? ' [/INST] ' : ' </s>';
-                prompt += `${role}${msg.text}${endRole}`;
+                if (msg.sender === 'user') {
+                    prompt += `${msg.text}<end_of_turn>\n<start_of_turn>model\n`;
+                } else {
+                    prompt += `${msg.text}<end_of_turn>\n<start_of_turn>user\n`;
+                }
             });
 
-            prompt += ` [INST] ${userInput} [/INST]`;
+            prompt += `${userInput}<end_of_turn>\n<start_of_turn>model\n`;
 
-            const response = await fetch(PROXY_URL + API_URL, {
+            const response = await fetch(API_URL, {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${HF_TOKEN}`,
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${HF_TOKEN}`
                 },
                 body: JSON.stringify({
                     inputs: prompt,
                     parameters: {
-                        max_new_tokens: 1000,
-                        temperature: 0.7,
-                        top_p: 0.95,
-                        return_full_text: false,
-                    },
-                    options: {
-                        wait_for_model: true
+                        max_new_tokens: 150,
+                        temperature: 0.7
                     }
                 }),
             });
 
-            // Specific check for Rate Limiting
+            // Handle Cold Starts
+            if (response.status === 503) {
+                throw new Error("MODEL_LOADING");
+            }
+
+            // Handle Rate Limits
             if (response.status === 429) {
                 throw new Error("RATE_LIMIT");
             }
 
-            // Security Check/Fallback: Avoid `Unexpected token N` json parsing error
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(errorText || 'Failed to connect to Hugging Face');
+                throw new Error(errorText || 'Failed to connect to Hugging Face API');
             }
 
-            // If we are here, it's safe to parse JSON
             const result = await response.json();
 
-            let reply = result[0]?.generated_text || result.generated_text;
+            let reply = result[0]?.generated_text || "Silence from the divine.";
 
-            if (!reply) {
-                throw new Error("Silence from the divine.");
+            // Clean the output by removing the echoed prompt
+            if (reply.includes(prompt)) {
+                reply = reply.replace(prompt, "").trim();
             }
 
-            // Clean up left-over Mistral tags just in case return_full_text overrides
-            reply = reply.replace(/\[\/INST\]/g, '').replace(/<s>/g, '').replace(/<\/s>/g, '').trim();
+            // Extra safety cleanup for Gemma tags
+            reply = reply.replace(/<start_of_turn>/g, "").replace(/<end_of_turn>/g, "").replace(/model/g, "").replace(/user/g, "").trim();
 
             return reply;
 
         } catch (error) {
             console.error("Error communicating with Hugging Face:", error);
-            throw error;
+
+            // Return user-friendly messages for known errors
+            if (error.message === "MODEL_LOADING") {
+                return "The divine realm is awakening (Cold Start). Please wait 20 seconds and ask me again, Partha.";
+            }
+            if (error.message === "RATE_LIMIT") {
+                return "The Gita is busy right now, please try again in a minute!";
+            }
+
+            throw error; // Let App.jsx handle the rest
         }
     }
 }
