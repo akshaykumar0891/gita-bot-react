@@ -1,12 +1,8 @@
-import { useState, useEffect } from 'react';
-import { GeminiService } from './GeminiService';
+import { hfService } from './HFService';
 import { ChatWindow } from './components/ChatWindow';
 import { ChatInput } from './components/ChatInput';
 import { HeroSection } from './components/HeroSection';
 import { PranayamaGuide } from './components/PranayamaGuide';
-
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const geminiService = new GeminiService(API_KEY);
 
 function App() {
   const [messages, setMessages] = useState(() => {
@@ -58,10 +54,8 @@ function App() {
     setIsLoading(true);
 
     try {
-      if (!API_KEY) throw new Error("API Key is missing. Please add VITE_GEMINI_API_KEY to your .env file.");
-
-      // Pass history to geminiService
-      const responseText = await geminiService.sendMessage(text, messages);
+      // Pass history to hfService
+      const responseText = await hfService.sendMessage(text, messages);
 
       const newAssistantMsg = {
         id: (Date.now() + 1).toString(),
@@ -75,7 +69,7 @@ function App() {
       console.error(error);
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
-        text: "I apologize, dear seeker. I'm experiencing some difficulty connecting to the divine wisdom. Please check your API key configuration and try again.",
+        text: "I apologize, dear seeker. I'm experiencing some difficulty connecting to the divine wisdom. Please check your Hugging Face API Token configuration and try again.",
         sender: 'assistant',
         timestamp: new Date().toISOString()
       }]);
@@ -104,7 +98,6 @@ function App() {
                 setMessages([]);
                 setShowHero(true);
                 localStorage.removeItem('gita_bot_messages');
-                geminiService.chatSession = null;
               }}
               style={{
                 background: 'transparent',
