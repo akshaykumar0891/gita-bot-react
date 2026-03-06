@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { hfService } from './HFService';
 import { ChatWindow } from './components/ChatWindow';
 import { ChatInput } from './components/ChatInput';
@@ -17,6 +17,9 @@ function App() {
   });
   const [showBreathing, setShowBreathing] = useState(false);
   const [theme, setTheme] = useState('light');
+
+  // Rate limiter reference
+  const lastRequestTime = useRef(0);
 
   // Save messages to browser local storage for infinite memory
   useEffect(() => {
@@ -41,6 +44,14 @@ function App() {
 
   const handleSendMessage = async (text) => {
     if (!text.trim() || isLoading) return;
+
+    // EFFICIENCY / THROTTLING CHECK
+    const now = Date.now();
+    if (now - lastRequestTime.current < 5000) {
+      alert("Please wait a few seconds before asking another question to preserve API limits.");
+      return;
+    }
+    lastRequestTime.current = now;
 
     if (showHero) setShowHero(false);
 

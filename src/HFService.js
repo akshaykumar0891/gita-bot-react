@@ -17,7 +17,6 @@ class HFService {
         if (!HF_TOKEN) {
             console.error("Hugging Face Token is missing. Please add VITE_HF_API_TOKEN to your .env file or GitHub Secrets.");
         }
-        this.hf = new HfInference(HF_TOKEN);
     }
 
     async sendMessage(userInput, history = []) {
@@ -26,35 +25,56 @@ class HFService {
                 throw new Error("Hugging Face Token is missing.");
             }
 
-            // Chat models expect an array of message objects {role, content}
-            const messages = [
-                { role: "system", content: SYSTEM_PROMPT },
-            ];
+            // Fallback to manual fetch with CORS proxy
+            // Note: users must click a button at https://cors-anywhere.herokuapp.com/corsdemo to unlock this
+            const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
+            const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
 
-            // Add previous conversation context
+            // Format history for Mistral Chat format manually since we are using fetch
+            let prompt = `<s>[INST] ${SYSTEM_PROMPT} [/INST] </s>`;
+
             history.forEach(msg => {
-                messages.push({
-                    role: msg.sender === 'user' ? 'user' : 'assistant',
-                    content: msg.text
-                });
+                const role = msg.sender === 'user' ? ' [INST] ' : ' ';
+                const endRole = msg.sender === 'user' ? ' [/INST] ' : ' </s>';
+                prompt += `${role}${msg.text}${endRole}`;
             });
 
-            // Add the new message
-            messages.push({ role: "user", content: userInput });
+            prompt += ` [INST] ${userInput} [/INST]`;
 
-            const out = await this.hf.chatCompletion({
-                model: MODEL_ID,
-                messages: messages,
-                max_tokens: 1000,
-                temperature: 0.7,
-                top_p: 0.95,
+            const response = await fetch(PROXY_URL + API_URL, {
+                headers: {
+                    Authorization: `Bearer ${HF_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+                method: "POST",
+                body: JSON.stringify({
+                    inputs: prompt,
+                    parameters: {
+                        max_new_tokens: 1000,
+                        temperature: 0.7,
+                        top_p: 0.95,
+                        return_full_text: false,
+                    },
+                    options: {
+                        wait_for_model: true
+                    }
+                }),
             });
 
-            if (!out.choices || out.choices.length === 0) {
-                throw new Error('Failed to generate a valid response from Hugging Face');
+            const result = await response.json();
+
+            if (!response.ok) {
+                if (result.error && result.error.includes("cors-anywhere")) {
+                    throw new Error('CORS Proxy locked! Please visit https://cors-anywhere.herokuapp.com/corsdemo to temporarily unlock it.');
+                }
+                throw new Error(result.error || 'Failed to connect to Hugging Face');
             }
 
-            return out.choices[0].message.content.trim();
+            let reply = result[0]?.generated_text || result.generated_text || "Silence from the divine.";
+            reply = reply.replace(/\[\/INST\]/g, '').replace(/<s>/g, '').replace(/<\/s>/g, '').trim();
+
+            return reply;
+
         } catch (error) {
             console.error("Error communicating with Hugging Face:", error);
             throw error;
