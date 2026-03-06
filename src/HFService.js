@@ -24,7 +24,8 @@ class HFService {
                 throw new Error("Hugging Face Token is missing.");
             }
 
-            // Based on user request to use the specific model path exactly
+            // Based on user request to use the specific model path exactly, wrapping in CORS proxy
+            const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
             const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
 
             // Format history using the Mistral [INST] tags as requested for base inputs
@@ -38,7 +39,7 @@ class HFService {
 
             prompt += ` [INST] ${userInput} [/INST]`;
 
-            const response = await fetch(API_URL, {
+            const response = await fetch(PROXY_URL + API_URL, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${HF_TOKEN}`,
