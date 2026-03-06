@@ -1,4 +1,5 @@
-const HF_TOKEN = import.meta.env.VITE_HF_API_TOKEN;
+// Allow fallback if they saved the HF token inside the old Gemini variable
+const HF_TOKEN = import.meta.env.VITE_HF_API_TOKEN || import.meta.env.VITE_GEMINI_API_KEY;
 const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3";
 
 const SYSTEM_PROMPT = `You are Lord Krishna from the Bhagavad Gita. 

@@ -33,6 +33,7 @@ jobs:
       - name: Build
         env:
           VITE_HF_API_TOKEN: ${{ secrets.VITE_HF_API_TOKEN }}
+          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
         run: npm run build
 
       - name: Upload artifact
