@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { hfService } from './HFService';
 import { ChatWindow } from './components/ChatWindow';
 import { ChatInput } from './components/ChatInput';
