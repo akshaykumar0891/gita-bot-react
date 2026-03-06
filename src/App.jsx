@@ -79,9 +79,16 @@ function App() {
       setMessages(prev => [...prev, newAssistantMsg]);
     } catch (error) {
       console.error(error);
+
+      let errorMessage = "I apologize, dear seeker. I'm experiencing some difficulty connecting to the divine wisdom. Please check your Hugging Face API Token configuration and try again.";
+
+      if (error.message === "RATE_LIMIT" || (error.message && error.message.includes("429"))) {
+        errorMessage = "The Gita is busy right now, please try again in a minute!";
+      }
+
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
-        text: "I apologize, dear seeker. I'm experiencing some difficulty connecting to the divine wisdom. Please check your Hugging Face API Token configuration and try again.",
+        text: errorMessage,
         sender: 'assistant',
         timestamp: new Date().toISOString()
       }]);
