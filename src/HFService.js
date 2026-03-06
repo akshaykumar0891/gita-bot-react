@@ -1,3 +1,5 @@
+import { HfInference } from "@huggingface/inference";
+
 // Allow fallback if they saved the HF token inside the old Gemini variable
 const HF_TOKEN = import.meta.env.VITE_HF_API_TOKEN || import.meta.env.VITE_GEMINI_API_KEY;
 const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3";
@@ -11,61 +13,48 @@ If the user asks a modern problem (e.g., job stress, relationship issues), expla
 Always end with a short blessing or a calming thought.`;
 
 class HFService {
+    constructor() {
+        if (!HF_TOKEN) {
+            console.error("Hugging Face Token is missing. Please add VITE_HF_API_TOKEN to your .env file or GitHub Secrets.");
+        }
+        this.hf = new HfInference(HF_TOKEN);
+    }
+
     async sendMessage(userInput, history = []) {
         try {
-            // Format history for Mistral Chat format
-            let prompt = `<s>[INST] ${SYSTEM_PROMPT} [/INST] </s>`;
+            if (!HF_TOKEN) {
+                throw new Error("Hugging Face Token is missing.");
+            }
+
+            // Chat models expect an array of message objects {role, content}
+            const messages = [
+                { role: "system", content: SYSTEM_PROMPT },
+            ];
 
             // Add previous conversation context
             history.forEach(msg => {
-                const role = msg.sender === 'user' ? ' [INST] ' : ' ';
-                const endRole = msg.sender === 'user' ? ' [/INST] ' : ' </s>';
-                prompt += `${role}${msg.text}${endRole}`;
+                messages.push({
+                    role: msg.sender === 'user' ? 'user' : 'assistant',
+                    content: msg.text
+                });
             });
 
             // Add the new message
-            prompt += ` [INST] ${userInput} [/INST]`;
+            messages.push({ role: "user", content: userInput });
 
-            if (!HF_TOKEN) {
-                throw new Error("Hugging Face Token is missing. Please add VITE_HF_API_TOKEN to your .env file or GitHub Secrets.");
+            const out = await this.hf.chatCompletion({
+                model: MODEL_ID,
+                messages: messages,
+                max_tokens: 1000,
+                temperature: 0.7,
+                top_p: 0.95,
+            });
+
+            if (!out.choices || out.choices.length === 0) {
+                throw new Error('Failed to generate a valid response from Hugging Face');
             }
 
-            const response = await fetch(
-                `https://api-inference.huggingface.co/models/${MODEL_ID}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${HF_TOKEN}`,
-                        "Content-Type": "application/json",
-                    },
-                    method: "POST",
-                    body: JSON.stringify({
-                        inputs: prompt,
-                        parameters: {
-                            max_new_tokens: 1000,
-                            temperature: 0.7,
-                            top_p: 0.95,
-                            return_full_text: false,
-                        },
-                        options: {
-                            wait_for_model: true // Important: Wakes up the model if sleeping
-                        }
-                    }),
-                }
-            );
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to connect to Hugging Face');
-            }
-
-            // Hugging Face returns an array with generated_text
-            let reply = result[0]?.generated_text || result.generated_text;
-
-            // Cleanup: Sometimes Mistral repeats the prompt or tags
-            reply = reply.replace(/\[\/INST\]/g, '').replace(/<s>/g, '').replace(/<\/s>/g, '').trim();
-
-            return reply;
+            return out.choices[0].message.content.trim();
         } catch (error) {
             console.error("Error communicating with Hugging Face:", error);
             throw error;
