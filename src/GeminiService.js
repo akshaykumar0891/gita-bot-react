@@ -55,7 +55,7 @@ export class GeminiService {
         }));
 
         this.chatSession = this.ai.chats.create({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             history: formattedHistory.length > 0 ? formattedHistory : undefined,
             config: {
                 systemInstruction: SYSTEM_PROMPT,
